@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "imageloader.cpp"
+#include <time.h>
 
 #include<Objeto.h>
 
@@ -40,6 +41,19 @@ float _pos = 0.08;
 
 GLuint texturaChao,texturaParede,texturaAzulejo, gato, raptor, porco, cabra;
 const float FLOOR_TEXTURE_SIZE = 15.0f; // Tamanho dos slices do chão.
+
+char c[0];
+int carac = 0;
+int numCaixas = 0;
+int media[1][15];
+int desvio[1][15];
+int quantidadeObj1[15];
+int quantidadeObj2[15];
+
+float random1, random2, random3, random4;
+
+GLuint skybox[6];//Faces do Mundo
+
 
 //prof-------------------------------
 GLfloat luz_pontual[] = {0.3*10, 0.5*10, 0.5*10, 0.0 };
@@ -122,8 +136,6 @@ void desenhar_eixos(){
 //prof-------------------------------
 
 
-
-
 /**
     Desenha as paredes.
 */
@@ -143,9 +155,9 @@ void desenharCaixas(){
    glTranslatef(0.0f ,0.95f, 0.0f);
    glBindTexture(GL_TEXTURE_2D,texturaParede);
 
-    float x = 10.0f;
-    float y = 10.0f;
-    float z = 10.0f;
+    float x = 20.0f;
+    float y = 20.0f;
+    float z = 20.0f;
 
     float yChao = -0.94f;
 
@@ -265,6 +277,60 @@ void carregarTexturas(){
 	delete image;
 }
 
+/*Inicializa o skyBox*/
+void initCeu()
+{
+
+	//frente
+	Image* image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_ft.bmp");
+	skybox[0] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	//direita
+	image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_rt.bmp");
+	skybox[1] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	//esquerda
+	image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_lf.bmp");
+	skybox[2] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	//trás
+	image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_bk.bmp");
+	skybox[3] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[3]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	//cima
+	image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_up.bmp");
+	skybox[4] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[4]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	// baixo
+	image = loadBMP("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Mundo/nevada_dn.bmp");
+	skybox[5] = loadMipmappedTexture(image);
+	glBindTexture(GL_TEXTURE_2D, skybox[5]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+
+	delete image;
+}
 
 void init(void){
    glClearColor (0.7, 0.7, 1.0, 0.0); //Cor de fundo
@@ -278,6 +344,9 @@ void init(void){
    glShadeModel (GL_SMOOTH);
 
    carregarTexturas();
+   initCeu();
+
+
 }
 
 
@@ -329,33 +398,70 @@ void desenhaMundo(){
 }
 
 
-void desenharCeu(){
+void desenharCeu(float posX, float posY, float posZ, float largura, float altura, float prof)
+{
 
-//	glBindTexture(GL_TEXTURE_2D, texturaCeu);
-	glBegin(GL_QUAD_STRIP);
-		glColor3ub(239,235,55); // horizonte
-		glVertex3f(310,70,-500);
+	// Centraliza a camera em torno da largura e altura.
+	posX = posX - largura  / 2;
+	posY = posY - altura / 2;
+	posZ = posZ - prof  / 2;
 
-		glVertex3f(310,70, 500);
-		glColor3ub(255,136,0);
-
-		glVertex3f(310,85,-500);
-		glVertex3f(310,85,500);
-		glColor3ub(170,11,61);
-
-		glVertex3f(310,100,-500);
-		glVertex3f(310,100,500);
-		glColor3ub(28,17,145);
-
-		glVertex3f(310,150,-500);
-		glVertex3f(310,150,500);
-		glColor3ub(0,0,0);
-
-		glVertex3f(310,250,-500);
-		glVertex3f(310,250,500);
+    glEnable(GL_TEXTURE_2D) ;
+	// Desenha a frente
+	glBindTexture(GL_TEXTURE_2D, skybox[0]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX,		   posY,		posZ+prof);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX,		   posY+altura, posZ+prof);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX+largura, posY+altura, posZ+prof);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX+largura, posY,		posZ+prof);
 	glEnd();
-}
 
+	// desenha o fundo
+	glBindTexture(GL_TEXTURE_2D, skybox[3]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX+largura, posY,		posZ);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX+largura, posY+altura, posZ);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX,		   posY+altura,	posZ);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX,		   posY,		posZ);
+	glEnd();
+
+	// desenha o lado esquerdo
+	glBindTexture(GL_TEXTURE_2D, skybox[2]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX,		  posY+altura,	posZ);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX,		  posY+altura,	posZ+prof);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX,		  posY,		    posZ+prof);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX,		  posY,		    posZ);
+	glEnd();
+
+	// desenha o lado direito
+	glBindTexture(GL_TEXTURE_2D, skybox[1]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX+largura, posY,		posZ);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX+largura, posY,		posZ+prof);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX+largura, posY+altura,	posZ+prof);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX+largura, posY+altura,	posZ);
+	glEnd();
+
+	// desenha a parte de cima
+	glBindTexture(GL_TEXTURE_2D, skybox[4]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX+largura, posY+altura, posZ);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX+largura, posY+altura, posZ+prof);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX,		   posY+altura,	posZ+prof);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX,		   posY+altura,	posZ);
+	glEnd();
+
+	// desenha a parte de baixo
+	glBindTexture(GL_TEXTURE_2D, skybox[5]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(posX,		   posY,		posZ);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(posX,		   posY,		posZ+prof);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(posX+largura, posY,		posZ+prof);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(posX+largura, posY,		posZ);
+	glEnd();
+
+}
 
 /**
     Desenha um plano em torno dos eixos X e Z
@@ -389,12 +495,12 @@ void asciiKeys(unsigned char key, int x, int y){
    switch (key)
    {
        case 32: // move pra cima [Space]
-            posCameraY += speedY; // aqui poderia limitar até onde pode subir, mas não precisa.
+            posCameraY += speedY * fracao; // aqui poderia limitar até onde pode subir, mas não precisa.
             break;
 
        case 8: // move pra baixo [BackSpace]
            if(posCameraY <= 1.0f) posCameraY += 0; // não passa do plano
-           else posCameraY -= speedY;
+           else posCameraY -= speedY * fracao;
            break;
 
        case 100: // move pra direita [D] -- corrigir
@@ -475,40 +581,74 @@ void display(void){
 
    glLightfv(GL_LIGHT1, GL_POSITION, luz_pontual);
 
-   desenhar_luz();
+ //  desenhar_luz();
    desenhar_eixos();
-   //desenhaMundo();
+
+   desenharCeu(posCameraX,posCameraY,posCameraZ,2000,2000,2000);
 
    desenharPlano();
+   if(random3 == 0) random3 = -1;
+   if(random4 == 0) random4 = -1;
 
     //Desenha as Caixas
-    for(int i = -2; i < 3; i++)
-        for(int j=-1; j < 1; j++)
-            {
+        for(int i = 0; i < numCaixas; i++){
                 glPushMatrix();
-                glTranslatef(i*25.0,0,j *25.0);
+                glTranslatef((random1)*i*(random3) ,0 , (random2)*i*(random4));
                 desenharCaixas();
+                glPopMatrix();
+        }
+
+        for(int i = 0; i < numCaixas; i++){
+            glPushMatrix();
+            glTranslatef((random1)*i*(random3) ,0 , (random2)*i*(random4));
+
+            glTranslatef(-10,0,-13);
+            for(int j = 0; j < quantidadeObj1[i]/2; j++){
+                glBindTexture(GL_TEXTURE_2D, raptor);
+                glTranslatef(2,0,0);
+                glPushMatrix();
+                glScalef(0.04f,0.04f,0.04f);
+                glRotatef(90,0,1,0);
+                obj1->desenharOBJ();
+                glPopMatrix();
+            }
+
+            glTranslated(-quantidadeObj1[i],0,0);
+            glTranslatef(0,0,10);
+            for(int j = quantidadeObj1[i]/2 + 1; j < quantidadeObj1[i]; j++){
+                glBindTexture(GL_TEXTURE_2D, raptor);
+                glTranslatef(2,0,0);
+                glPushMatrix();
+                glScalef(0.04f,0.04f,0.04f);
+                glRotatef(90,0,1,0);
+                obj1->desenharOBJ();
                 glPopMatrix();
             }
 
 
-    glBindTexture(GL_TEXTURE_2D, raptor);
-    glTranslatef(-1,0,0);
-    glPushMatrix();
-    glScalef(0.04f,0.04f,0.04f);
-    glRotatef(90,0,1,0);
-    obj1->desenharOBJ();
-    glPopMatrix();
+            glTranslated(-quantidadeObj1[i],0,0);
+            glTranslatef(0,0,10);
+            for(int j = 0; j < quantidadeObj2[i]/2; j++){
+                glTranslatef(2.0f,0,0);
+                glBindTexture(GL_TEXTURE_2D, porco);
+                obj2->desenharOBJ();
+            }
 
+            glTranslated(-quantidadeObj1[i],0,0);
+            glTranslatef(0,0,5);
+            for(int j = quantidadeObj2[i]/2 +1; j < quantidadeObj2[i]; j++){
+                glTranslatef(2.0f,0,0);
+                glBindTexture(GL_TEXTURE_2D, porco);
+         //       obj2->desenharOBJ();
+            }
 
-    glTranslatef(4.0f,0,0);
-    glBindTexture(GL_TEXTURE_2D, porco);
-    obj2->desenharOBJ();
+            // glTranslatef(2.0f,0,0);
+            // glBindTexture(GL_TEXTURE_2D, gato);
+            // obj3->desenharOBJ();
 
-
-    glTranslatef(2.0f,0,0);
-    glBindTexture(GL_TEXTURE_2D, gato);
-    obj3->desenharOBJ();
+            glTranslated(-quantidadeObj1[i],0,0);
+            glPopMatrix();
+ }
 
    glDisable(GL_LIGHTING);
 
@@ -536,7 +676,7 @@ void reshape(int w, int h){
     glViewport(0, 0, w, h);
 
     // Configura a perspectiva.
-    gluPerspective(ang, Ratio, 0.1f, 200.0f);
+    gluPerspective(ang, Ratio, 0.1f, 2000.0f);
 
     // obtém a matriz de visualização.
     glMatrixMode(GL_MODELVIEW);
@@ -558,8 +698,86 @@ void funcaoMouse(int button,int state, int x, int y){
      glutPostRedisplay();
 }
 
+void arquivos(){
+    FILE *arq;
+
+    arq = fopen("C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Entrada.txt","r");
+
+    carac = fgetc(arq);
+    c[0] = carac;
+    numCaixas = atoi(c);
+    fgetc(arq);
+
+    printf("%d\n" , numCaixas);
+
+    int i = 0;
+    int j = 0;
+
+    for (i = 0; i < numCaixas; i++){
+        for(j = 0; j <= 5; j++){//Objeto1
+            fgetc(arq);
+        }
+
+        carac = fgetc(arq);
+        c[0] = carac;
+        media[0][i] = atoi(c);
+        printf("\n%d", media[0][i]);
+
+        fgetc(arq);
+
+        carac = fgetc(arq);
+        c[0] = carac;
+        desvio[0][i] = atoi(c);
+        printf("%d\n", desvio[0][i]);
+
+        for(j = 0; j < 4; j++){//Objeto2
+            fgetc(arq);
+        }
+
+        carac = fgetc(arq);
+        c[0] = carac;
+        media[1][i] = atoi(c);
+        printf("%d", media[1][i]);
+
+        fgetc(arq);
+
+        carac = fgetc(arq);
+        c[0] = carac;
+        desvio[1][i] = atoi(c);
+        printf("%d", desvio[1][i]);
+
+        fgetc(arq);
+
+
+    }
+
+     for(int i = 0; i < numCaixas; i++){
+        quantidadeObj1[i] = rand()%(media[0][i]-desvio[0][i]+1)+(media[0][i]+desvio[0][i]);
+        quantidadeObj2[i] = rand()%(media[0][i]-desvio[1][i]+1)+(media[1][i]+desvio[0][i]);
+
+        printf("\n%d-----1--%d\n", i,quantidadeObj1[i]/2);
+        printf("---------2--%d\n", quantidadeObj2[i]);
+    }
+
+    random1 = rand()%10+50;//((50*(i-1));//+(50*i);
+    random2 = rand()%10+50;
+    random3 = rand()%2;
+    random4 = rand()%2;
+    printf("Random1: %f\n",random1);
+    printf("Random2: %f\n",random2);
+    printf("Random3: %f\n",random3);
+    printf("Random4: %f\n",random4);
+
+    fclose(arq);
+
+}
+
+
 
 int main(int argc, char** argv){
+   srand ( time(NULL) );//semente randomica
+
+   arquivos();
    obj1 = new Objeto();
    obj2 = new Objeto();
    obj3 = new Objeto();

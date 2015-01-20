@@ -1,11 +1,12 @@
 # depslib dependency file v1.0
-1421023430 source:c:\users\breno cruz\documents\opengl projects\newglut\main.cpp
+1421146911 source:c:\users\breno cruz\documents\opengl projects\newglut\main.cpp
 	<GL/gl.h>
 	<GL/glu.h>
 	<GL/glut.h>
 	<math.h>
 	<stdio.h>
 	"imageloader.cpp"
+	<time.h>
 	<Objeto.h>
 
 1414020248 c:\mingw\include\gl\glut.h
@@ -258,7 +259,7 @@
 1420990126 c:\users\breno cruz\documents\opengl projects\newglut\objeto.c
 	<C:/Users/Breno Cruz/Documents/OpenGL Projects/NewGlut/Vetor.c>
 
-1421019142 c:\users\breno cruz\documents\opengl projects\newglut\include\objeto.h
+1421114417 c:\users\breno cruz\documents\opengl projects\newglut\include\objeto.h
 	<GL/gl.h>
 	<GL/glu.h>
 	<GL/glut.h>
@@ -291,4 +292,8 @@
 
 1420994799 source:c:\users\breno cruz\documents\opengl projects\newglut\src\vetor.cpp
 	"Vetor.h"
+
+1341006777 c:\mingw\include\time.h
+	<_mingw.h>
+	<stddef.h>
 
